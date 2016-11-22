@@ -1,13 +1,13 @@
 //========================================================================
 //
-// LPI 3D deck - Linearly polarized (in y) plane wave incident from left 
-//               boundary 
+// LPI 3D deck - Linearly polarized (in y) plane wave incident from left
+//               boundary
 //
-// Adapted from Albright's Lightning 3D LPI deck.  
+// Adapted from Albright's Lightning 3D LPI deck.
 // B. Albright, X-1-PTA;      28 Jan. 2007
-// 
-// Only poynting data output (to stdout).  
-// Restart, quota checks, divergence cleaning turned off. 
+//
+// Only poynting data output (to stdout).
+// Restart, quota checks, divergence cleaning turned off.
 //========================================================================
 
 begin_globals {
@@ -20,20 +20,20 @@ begin_globals {
   int quota_check_interval;    // how often to check if quote exceeded
   double quota_sec;            // run quota in sec
   int rtoggle;                 // enable save of last 2 restart files for safety
-  int load_particles;          // were particles loaded? 
-  double topology_x;           // domain topology needed to normalize Poynting diagnostic 
+  int load_particles;          // were particles loaded?
+  double topology_x;           // domain topology needed to normalize Poynting diagnostic
   double topology_y;
   double topology_z;
   int mobile_ions;
-  int H_present; 
-  int He_present; 
+  int H_present;
+  int He_present;
   int write_poynting_data;     // Whether to write poynting data to file (or just stdout)
 
   // Parameters for 3d Gaussian wave launch
-  double lambda;               
+  double lambda;
   double waist;                // how wide the focused beam is
-  double width;                
-  double zcenter;              // center of beam at boundary in z 
+  double width;
+  double zcenter;              // center of beam at boundary in z
   double ycenter;              // center of beam at boundary in y
   double xfocus;               // how far from boundary to focus
   double mask;                 // # gaussian widths from beam center where I is nonzero
@@ -41,15 +41,15 @@ begin_globals {
 };
 
 begin_initialization {
-  
+
   // System of units
 
   double ec         = 4.8032e-10;          // stat coulomb
   double c_vac      = 2.99792458e10;       // cm/sec
   double m_e        = 9.1094e-28;          // g
   double k_b        = 1.6022e-12;          // erg/eV
-  double mec2       = m_e*c_vac*c_vac/k_b; 
-  double mpc2       = mec2*1836.0; 
+  double mec2       = m_e*c_vac*c_vac/k_b;
+  double mpc2       = mec2*1836.0;
 
   double cfl_req    = 0.98;                // How close to Courant should we try to run
   double damp       = 0;                   // How much radiation damping
@@ -63,113 +63,116 @@ begin_initialization {
   double vacuum_wavelength = 351 * 1e-7;   // third micron light (cm)
   double laser_intensity   = 1e17 * 1e7;   // in ergs/cm^2 (note: 1 W = 1e7 ergs)
 
-  // Simulation parameters 
+  // Simulation parameters
 
   // Assume f/# = 4
-  double Lx                = 35.0* 1e-4;   // In cm (note: 1 micron = 1e-4 cm)   
-  double Ly                = 6.0 * 1e-4;                 
-  double Lz                = 6.0 * 1e-4;                 
+  double Lx                = 35.0* 1e-4;   // In cm (note: 1 micron = 1e-4 cm)
+  double Ly                = 6.0 * 1e-4;
+  double Lz                = 6.0 * 1e-4;
 
 # if 1
   // Smaller problem for 48 core CU
-  Lx /= 270;                                // 1/270 of the targeted problem on full RR 
+  Lx /= 270;                                // 1/270 of the targeted problem on full RR
   double nx                = 63;
   double ny                = 84;
-  double nz                = 84; 
-  double topology_x        = 3;
-  double topology_y        = 4;
-  double topology_z        = 4;           // 48 proc
-#endif 
+  double nz                = 84;
+  //double topology_x        = 3;
+  //double topology_y        = 4;
+  //double topology_z        = 4;           // 48 proc
+  double topology_x        = 1;
+  double topology_y        = 1;
+  double topology_z        = 1;           // 48 proc
+#endif
 
 # if 0
   // Smaller problem for 720 core CU
-  Lx /= 18;                                // 1/18 of the targeted problem on full RR 
+  Lx /= 18;                                // 1/18 of the targeted problem on full RR
   double nx                = 110;
   double ny                = 252;
-  double nz                = 252; 
+  double nz                = 252;
   double topology_x        = 5;
   double topology_y        = 12;
   double topology_z        = 12;           // 720 proc
-#endif 
+#endif
 
 # if 0
   double nx                = 2048;
   double ny                = 256;
-  double nz                = 256; 
+  double nz                = 256;
   double topology_x        = 64;
   double topology_y        = 4;
   double topology_z        = 4;            // 1024 proc
-# endif 
+# endif
 
 
 # if 0
   // Make box size smaller for fewer proc run:  for f/#=4
   Lx /= 4;  nx /= 4;
-  Ly /= 2;  ny /= 2;   
-  Lz /= 2;  nz /= 2; 
+  Ly /= 2;  ny /= 2;
+  Lz /= 2;  nz /= 2;
 
-  topology_x = 64; 
-  topology_y = 4;  
-  topology_z = 4; 
-# endif  
+  topology_x = 64;
+  topology_y = 4;
+  topology_z = 4;
+# endif
 
 
 # if 0
   // Make box size smaller for test run
   Lx /= 4*32;  nx /= 4*32;
-  Ly /= 2*2;   ny /= 2*2;   
-  Lz /= 2*2;   nz /= 2*2; 
+  Ly /= 2*2;   ny /= 2*2;
+  Lz /= 2*2;   nz /= 2*2;
 
-  topology_x = 2; 
-  topology_y = 2;  
-  topology_z = 2; 
-# endif  
+  topology_x = 2;
+  topology_y = 2;
+  topology_z = 2;
+# endif
 
 
-  // For GB:  Max performance = increase nppc until problem doesn't fit in memory anymore! 
+  // For GB:  Max performance = increase nppc until problem doesn't fit in memory anymore!
 
   double nppc              = 25;           // Ave. number of particles/cell in ea. species
-  int load_particles       = 1;            // Flag to turn on/off particle load 
+  int load_particles       = 1;            // Flag to turn on/off particle load
 
   int mobile_ions          = 1;            // Whether or not to push ions
   int He_present=1, H_present=1;           // Initialize parameters
   double f_He              = 0.5;          // Ratio of number density of He to total ion density
   double f_H               = 1-f_He;       // Ratio of number density of H  to total ion density
-  if ( f_He==1 ) H_present=0; 
-  if ( f_He==0 ) He_present=0; 
+  if ( f_He==1 ) H_present=0;
+  if ( f_He==0 ) He_present=0;
 
-  // Precompute some useful variables. 
+  // Precompute some useful variables.
   double A_H               = 1;
   double A_He              = 4;
   double Z_H               = 1;
-  double Z_He              = 2; 
+  double Z_He              = 2;
   double mic2_H            = mpc2*A_H;
   double mic2_He           = mpc2*A_He;
-  double mime_H            = mic2_H /mec2; 
-  double mime_He           = mic2_He/mec2; 
+  double mime_H            = mic2_H /mec2;
+  double mime_He           = mic2_He/mec2;
 
   double uth_e             = sqrt(t_e/mec2);      // vthe/c
   double uthi_H            = sqrt(t_i/mic2_H);    // vthi/c for H
   double uthi_He           = sqrt(t_i/mic2_He);   // vthi/c for He
 
   // Plasma skin deptth in cm
-  double delta = (vacuum_wavelength / (2*M_PI) ) / sqrt( n_e_over_n_crit ); 
+  double delta = (vacuum_wavelength / (2*M_PI) ) / sqrt( n_e_over_n_crit );
 
   double n_e   = c_vac*c_vac*m_e/(4*M_PI*ec*ec*delta*delta); // electron density in cm^-3
   double debye = uth_e*delta;                     // electron Debye length (cm)
   double omega = sqrt( 1/n_e_over_n_crit );       // laser beam freq. in wpe
 
-  // Peak instantaneous E field in "natural units" 
-  double e0    = sqrt( 2*laser_intensity / (m_e*c_vac*c_vac*c_vac*n_e) );  
+  // Peak instantaneous E field in "natural units"
+  double e0    = sqrt( 2*laser_intensity / (m_e*c_vac*c_vac*c_vac*n_e) );
 
   // Set up local mesh resolution and time step
   Lx /= delta;                                    // Convert box size to skin depths
-  Ly /= delta;   
-  Lz /= delta;   
+  Ly /= delta;
+  Lz /= delta;
 
-  double hx = Lx/nx; 
-  double hy = Ly/ny; 
-  double hz = Lz/nz; 
+  double hx = Lx/nx;
+  double hy = Ly/ny;
+  double hz = Lz/nz;
 
   double cell_size_x       = hx*delta/debye;      // Cell size in Debye lengths
   double cell_size_y       = hy*delta/debye;
@@ -182,36 +185,36 @@ begin_initialization {
   double ycenter           = 0;                   // center of spot in y on lhs boundary
   double zcenter           = 0;                   // center of spot in z on lhs boundary
   double mask              = 1.5;                 // set drive I=0 outside r>mask*width at lhs boundary
-  double width = waist*sqrt( 1 + (lambda*xfocus/(M_PI*waist*waist))*(lambda*xfocus/(M_PI*waist*waist))); 
-  e0                       = e0*(waist/width);    // at entrance (3D Gaussian) 
- 
+  double width = waist*sqrt( 1 + (lambda*xfocus/(M_PI*waist*waist))*(lambda*xfocus/(M_PI*waist*waist)));
+  e0                       = e0*(waist/width);    // at entrance (3D Gaussian)
+
   double dt                = cfl_req*courant_length(Lx,Ly,Lz,nx,ny,nz); // in 1/wpe; n.b. c=1 in nat. units
-  double nsteps_cycle      = trunc_granular(2*M_PI/(dt*omega),1)+1; 
+  double nsteps_cycle      = trunc_granular(2*M_PI/(dt*omega),1)+1;
   dt                       = 2*M_PI/omega/nsteps_cycle; // nsteps_cycle time steps in one laser cycle
 
   double t_stop            = 1001;                // Runtime in 1/wpe
-  int particle_interval    = 0; 
+  int particle_interval    = 0;
   int poynting_interval    = 16;                  // Num. steps between dumping poynting flux
   int field_interval       = 0;                   // Num. steps between saving field, hydro data
   int restart_interval     = 0;                   // Num. steps between restart dumps
   int quota_check_interval = 100000;
-  double quota_sec         = 12*3600;             // Run quota in sec. 
+  double quota_sec         = 12*3600;             // Run quota in sec.
   int write_poynting_data  = 0;                   // Whether to write poynting data to file (or just stdout)
 
   double N_e               = nppc*nx*ny*nz;       // Number of macro electrons in box
   double Np_e              = Lx*Ly*Lz;            // "Number" of "physical" electrons in box (nat. units)
   double q_e               = -Np_e/N_e;           // Charge per macro electron
-  double N_i               = N_e;                 // Number of macro ions of each species in box 
+  double N_i               = N_e;                 // Number of macro ions of each species in box
   double Np_i              = Np_e/(Z_H*f_H+Z_He*f_He); // "Number" of "physical" ions of each sp. in box
   double qi_H              = Z_H *f_H *Np_i/N_i;  // Charge per H  macro ion
-  double qi_He             = Z_He*f_He*Np_i/N_i;  // Charge per He macro ion 
-  
+  double qi_He             = Z_He*f_He*Np_i/N_i;  // Charge per He macro ion
+
   // Print simulation parameters
 
   sim_log("***** Simulation parameters *****");
   sim_log("* Processors:                     "<<nproc());
-  sim_log("* Topology:                       "<<topology_x<<" "<<topology_y<<" "<<topology_z); 
-  sim_log("* Time step, max time, nsteps:    "<<dt<<" "<<t_stop<<" "<<int(t_stop/(dt))); 
+  sim_log("* Topology:                       "<<topology_x<<" "<<topology_y<<" "<<topology_z);
+  sim_log("* Time step, max time, nsteps:    "<<dt<<" "<<t_stop<<" "<<int(t_stop/(dt)));
   sim_log("* Debye length, XYZ cell sizes:   "<<debye<<" "<<cell_size_x<<" "<<cell_size_y<<" "<<cell_size_z);
   sim_log("* Real cell sizes (in Debyes):    "<<hx/uth_e<<" "<<hy/uth_e<<" "<<hz/uth_e);
   sim_log("* Lx, Ly, Lz =                    "<<Lx<<" "<<Ly<<" "<<Lz);
@@ -232,38 +235,38 @@ begin_initialization {
   sim_log("* vthe_He/c:                      "<<uthi_He);
   sim_log("* emax at entrance:               "<<e0);
   sim_log("* emax at waist:                  "<<e0/(waist/width));
-  sim_log("* Poynting interval:              "<<poynting_interval); 
-  sim_log("* field interval:                 "<<field_interval); 
-  sim_log("* restart interval:               "<<restart_interval); 
+  sim_log("* Poynting interval:              "<<poynting_interval);
+  sim_log("* field interval:                 "<<field_interval);
+  sim_log("* restart interval:               "<<restart_interval);
   sim_log("* num vacuum edge grids:          "<<iv_thick);
-  sim_log("* width, waist, xfocus:           "<<width<<" "<<waist<<" "<<xfocus); 
-  sim_log("* ycenter, zcenter, mask:         "<<ycenter<<" "<<zcenter<<" "<<mask); 
+  sim_log("* width, waist, xfocus:           "<<width<<" "<<waist<<" "<<xfocus);
+  sim_log("* ycenter, zcenter, mask:         "<<ycenter<<" "<<zcenter<<" "<<mask);
   sim_log("*********************************");
 
   // Set up high level simulation parameters
 
-  sim_log("Setting up high-level simulation parameters."); 
-  num_step             = int(t_stop/(dt)); 
+  sim_log("Setting up high-level simulation parameters.");
+  num_step             = int(t_stop/(dt));
 
   verbose              = 0;
   num_comm_round       = 6;
   // DEBUG:  We need more info to find bugs.
   status_interval      = 20; // 2000;
-  sync_shared_interval = status_interval; 
-  clean_div_e_interval = status_interval; 
-  clean_div_b_interval = status_interval; 
+  sync_shared_interval = status_interval;
+  clean_div_e_interval = status_interval;
+  clean_div_b_interval = status_interval;
 
   // On cell, divergence cleaning (of E particularly) is very expensive.  Turn this
-  // off for the GB runs. 
-# if 0                                            
-  sync_shared_interval = status_interval/10; 
-  clean_div_e_interval = status_interval;           
-  clean_div_b_interval = status_interval/10; 
-# endif 
-  
-  global->e0                   = e0; 
-  global->omega                = omega; 
-  global->field_interval       = field_interval; 
+  // off for the GB runs.
+# if 0
+  sync_shared_interval = status_interval/10;
+  clean_div_e_interval = status_interval;
+  clean_div_b_interval = status_interval/10;
+# endif
+
+  global->e0                   = e0;
+  global->omega                = omega;
+  global->field_interval       = field_interval;
   global->particle_interval    = particle_interval;
   global->poynting_interval    = poynting_interval;
   global->restart_interval     = restart_interval;
@@ -271,53 +274,32 @@ begin_initialization {
   global->quota_sec            = quota_sec;
   global->rtoggle              = 0;
   global->load_particles       = load_particles;
-  global->mobile_ions          = mobile_ions; 
-  global->H_present            = H_present; 
-  global->He_present           = He_present; 
-  global->topology_x           = topology_x;  
-  global->topology_y           = topology_y;  
-  global->topology_z           = topology_z;  
-  global->xfocus               = xfocus;  
-  global->ycenter              = ycenter; 
-  global->zcenter              = zcenter; 
-  global->mask                 = mask; 
-  global->waist                = waist; 
-  global->width                = width; 
-  global->lambda               = lambda; 
-  global->write_poynting_data  = write_poynting_data; 
-
-  // Set up the species
-  // Allow additional local particles in case of non-uniformity.
-
-  // Note:  We have to adjust sort intervals for maximum performance on Cell. 
-
-  sim_log("Setting up species."); 
-  double max_local_np = 2.5*N_e/nproc(); 
-  double max_local_nm = max_local_np/10;                       // Default is max_local_np/12.5  
-  int ele_sort_int    = 200;
-  int ion_sort_int    = ele_sort_int*20; 
-  species_t * electron = define_species("electron", -1,  1, max_local_np, max_local_nm, ele_sort_int, 1); 
-
-  // Start with two ion species.  We have option to go to Xe and Kr gas fills if 
-  // we need a higher ion/electron macroparticle ratio.  
-
-  species_t *ion_H, *ion_He; 
-  if ( mobile_ions ) {
-    if ( H_present  ) ion_H  = define_species("H",  Z_H,  mime_H,  max_local_np, max_local_nm, ion_sort_int, 1); 
-    if ( He_present ) ion_He = define_species("He", Z_He, mime_He, max_local_np, max_local_nm, ion_sort_int, 1); 
-  }
+  global->mobile_ions          = mobile_ions;
+  global->H_present            = H_present;
+  global->He_present           = He_present;
+  global->topology_x           = topology_x;
+  global->topology_y           = topology_y;
+  global->topology_z           = topology_z;
+  global->xfocus               = xfocus;
+  global->ycenter              = ycenter;
+  global->zcenter              = zcenter;
+  global->mask                 = mask;
+  global->waist                = waist;
+  global->width                = width;
+  global->lambda               = lambda;
+  global->write_poynting_data  = write_poynting_data;
 
   // Set up grid
-  sim_log("Setting up computational grid."); 
+  sim_log("Setting up computational grid.");
   define_units( 1, 1 );
   define_timestep( dt );
 
-  sim_log("Setting up periodic mesh."); 
+  sim_log("Setting up periodic mesh.");
   define_absorbing_grid( 0,         -0.5*Ly,    -0.5*Lz,        // Low corner
-                         Lx,         0.5*Ly,     0.5*Lz,        // High corner 
+                         Lx,         0.5*Ly,     0.5*Lz,        // High corner
                          nx,         ny,         nz,            // Resolution
                          topology_x, topology_y, topology_z,    // Topology
-                         reflect_particles );                   // Default particle boundary condition 
+                         reflect_particles );                   // Default particle boundary condition
 
   // From grid/partition.c: used to determine which domains are on edge
 # define RANK_TO_INDEX(rank,ix,iy,iz) BEGIN_PRIMITIVE {                   \
@@ -330,15 +312,38 @@ begin_initialization {
     (ix) = _ix;                                                           \
     (iy) = _iy;                                                           \
     (iz) = _iz;                                                           \
-  } END_PRIMITIVE 
+  } END_PRIMITIVE
 
-  sim_log("Overriding x boundaries to absorb fields."); 
+  // Set up the species
+  // Allow additional local particles in case of non-uniformity.
+
+  // Note:  We have to adjust sort intervals for maximum performance on Cell.
+
+  sim_log("Setting up species.");
+  double max_local_np = 2.5*N_e/nproc();
+  double max_local_nm = max_local_np/10;                       // Default is max_local_np/12.5
+  int ele_sort_int    = 200;
+  int ion_sort_int    = ele_sort_int*20;
+  species_t * electron = define_species("electron", -1,  1, max_local_np, max_local_nm, ele_sort_int, 1);
+
+  // Start with two ion species.  We have option to go to Xe and Kr gas fills if
+  // we need a higher ion/electron macroparticle ratio.
+
+  species_t *ion_H, *ion_He;
+  if ( mobile_ions ) {
+    if ( H_present  ) ion_H  = define_species("H",  Z_H,  mime_H,  max_local_np, max_local_nm, ion_sort_int, 1);
+    if ( He_present ) ion_He = define_species("He", Z_He, mime_He, max_local_np, max_local_nm, ion_sort_int, 1);
+  }
+
+
+
+  sim_log("Overriding x boundaries to absorb fields.");
   int ix, iy, iz;        // Domain location in mesh
-  RANK_TO_INDEX( int(rank()), ix, iy, iz ); 
+  RANK_TO_INDEX( int(rank()), ix, iy, iz );
 
-  // Set up Maxwellian reinjection B.C. 
+  // Set up Maxwellian reinjection B.C.
 
-  sim_log("Setting up Maxwellian reinjection boundary condition."); 
+  sim_log("Setting up Maxwellian reinjection boundary condition.");
 
   particle_bc_t * maxwellian_reinjection =
     define_particle_bc( maxwellian_reflux( species_list, entropy ) );
@@ -348,18 +353,20 @@ begin_initialization {
     if( He_present ) set_reflux_temp( maxwellian_reinjection, ion_He, uthi_He, uthi_He );
   }
 
+
+
   // Set up materials
-  sim_log("Setting up materials."); 
+  sim_log("Setting up materials.");
   define_material( "vacuum", 1 );
-  define_field_array( NULL, damp ); 
- 
+  define_field_array( NULL, damp );
+
   // Paint the simulation volume with materials and boundary conditions
 # define iv_region (   x<      hx*iv_thick || x>Lx  -hx*iv_thick  \
                     || y<-Ly/2+hy*iv_thick || y>Ly/2-hy*iv_thick  \
-                    || z<-Lz/2+hz*iv_thick || z>Lz/2-hz*iv_thick ) /* all boundaries are i.v. */ 
-  set_region_bc( iv_region, maxwellian_reinjection, maxwellian_reinjection, maxwellian_reinjection ); 
+                    || z<-Lz/2+hz*iv_thick || z>Lz/2-hz*iv_thick ) /* all boundaries are i.v. */
+  set_region_bc( iv_region, maxwellian_reinjection, maxwellian_reinjection, maxwellian_reinjection );
 
-  // Load particles 
+  // Load particles
   if ( load_particles ) {
     sim_log("Loading particles.");
     // Fast load of particles--don't bother fixing artificial domain correlations
@@ -378,20 +385,20 @@ begin_initialization {
                        normal( rng(0), 0, uth_e ), -q_e, 0, 0 );
       if ( mobile_ions ) {
         if ( H_present )  // Inject an H macroion on top of macroelectron
-          inject_particle( ion_H, x, y, z, 
-                           normal( rng(0), 0, uthi_H ), 
-                           normal( rng(0), 0, uthi_H ), 
-                           normal( rng(0), 0, uthi_H ), qi_H, 0, 0 ); 
+          inject_particle( ion_H, x, y, z,
+                           normal( rng(0), 0, uthi_H ),
+                           normal( rng(0), 0, uthi_H ),
+                           normal( rng(0), 0, uthi_H ), qi_H, 0, 0 );
         if ( He_present ) // Inject an H macroion on top of macroelectron
-          inject_particle( ion_He, x, y, z, 
+          inject_particle( ion_He, x, y, z,
                            normal( rng(0), 0, uthi_He ),
                            normal( rng(0), 0, uthi_He ),
-                           normal( rng(0), 0, uthi_He ), qi_He, 0, 0 ); 
+                           normal( rng(0), 0, uthi_He ), qi_He, 0, 0 );
       }
     }
   }
 
-  sim_log("***Finished with user-specified initialization ***"); 
+  sim_log("***Finished with user-specified initialization ***");
 
   // Upon completion of the initialization, the following occurs:
   // - The synchronization error (tang E, norm B) is computed between domains
@@ -419,16 +426,16 @@ begin_initialization {
   // - Increment the time step
   // - Call user diagnostics
   // - (periodically) Print a status message
-} 
+}
 
 
 begin_diagnostics {
-  if ( step()%200==0 ) sim_log("Time step: "<<step()); 
+  if ( step()%200==0 ) sim_log("Time step: "<<step());
 
 # define should_dump(x) \
   (global->x##_interval>0 && remainder(step(),global->x##_interval)==0)
 
-  // Turn off these diagnostics for GB runs 
+  // Turn off these diagnostics for GB runs
 # if 0
 
  if ( step()==0 ) {
@@ -467,36 +474,36 @@ begin_diagnostics {
       if ( global->H_present  ) dump_particles( "H",  "particle/Hparticle" );
       if ( global->He_present ) dump_particles( "He", "particle/Heparticle" );
     }
-  } 
+  }
 
-# endif 
+# endif
 
   // Ponyting data - send to stdout for GB run
   // Write Poynting flux at left boundary
-  // Poynting flux is defined positive if directed in the +x direction. 
-  // TODO: It is assumed that Ponyting dumps are infrequent, so we can afford the 
-  // mpi_allreduce() here.  This needs to be verified on RR hardware. 
-  
-#define ALLOCATE(A,LEN,TYPE)                                             \
-  if ( !((A)=(TYPE *)malloc((size_t)(LEN)*sizeof(TYPE))) ) ERROR(("Cannot allocate.")); 
+  // Poynting flux is defined positive if directed in the +x direction.
+  // TODO: It is assumed that Ponyting dumps are infrequent, so we can afford the
+  // mpi_allreduce() here.  This needs to be verified on RR hardware.
 
-  static float *pvec=NULL; 
-  static double psum, gpsum; 
+#define ALLOCATE(A,LEN,TYPE)                                             \
+  if ( !((A)=(TYPE *)malloc((size_t)(LEN)*sizeof(TYPE))) ) ERROR(("Cannot allocate."));
+
+  static float *pvec=NULL;
+  static double psum, gpsum;
   static FILE *fp_poynting;
   static char fname_poynting[]="poynting/poynting";
-  static int stride, initted=0; 
-  
-  if ( !initted ) { 
-    stride=(grid->ny-1)*(grid->nz-1); 
-    ALLOCATE( pvec, stride, float ); 
-    initted=1; 
+  static int stride, initted=0;
+
+  if ( !initted ) {
+    stride=(grid->ny-1)*(grid->nz-1);
+    ALLOCATE( pvec, stride, float );
+    initted=1;
   }
 
   if ( step()>0 && should_dump(poynting) ) {
-    int i, j, k, k1, k2, ix, iy, iz; 
-    for ( i=0; i<stride; ++i ) pvec[i]=0;     // Initialize pvec to zero. 
+    int i, j, k, k1, k2, ix, iy, iz;
+    for ( i=0; i<stride; ++i ) pvec[i]=0;     // Initialize pvec to zero.
     // FIXME: THIS COULD BE DONE BETTER WITH VPIC.HXX HELPERS
-    RANK_TO_INDEX( int(rank()), ix, iy, iz ); 
+    RANK_TO_INDEX( int(rank()), ix, iy, iz );
     if ( ix==0 ) {                            // Compute Poynting for domains on left of box
       for ( j=1; j<grid->ny; ++j ) {
         for ( k=1; k<grid->nz; ++k ) {
@@ -510,71 +517,71 @@ begin_diagnostics {
     }                                         // Leave pvec = zero in mp_allsum_d for interior
 
     // Sum poynting flux on surface
-    for ( i=0, psum=0; i<stride; ++i ) psum+=pvec[i]; 
+    for ( i=0, psum=0; i<stride; ++i ) psum+=pvec[i];
     // Sum over all surfaces
     mp_allsum_d(&psum, &gpsum, 1);
     // Divide by number of mesh points summed over
-    gpsum /= stride*global->topology_y*global->topology_z; 
-    
-    if ( rank()==0 && global->write_poynting_data ) { 
+    gpsum /= stride*global->topology_y*global->topology_z;
+
+    if ( rank()==0 && global->write_poynting_data ) {
       fp_poynting=fopen( fname_poynting, (step()==global->poynting_interval ? "w" : "rb+") );
       if ( !fp_poynting ) ERROR(("Could not open file."));
       fseek( fp_poynting,
              (step()/global->poynting_interval-1)*sizeof(double), SEEK_SET );
       fwrite( &gpsum, sizeof(double), 1, fp_poynting );
       fclose(fp_poynting);
-    } 
+    }
     sim_log("** step = "<<step()<<" Poynting = "<<gpsum);  // Dump data to stdout
   }
 
 # if 0
-  // Restart dump 
+  // Restart dump
 
   if ( should_dump(restart) ) {
-    char *restart_fbase[] = { "restart/restart0", "restart/restart1" }; 
-    dump_restart( restart_fbase[global->rtoggle], 0 ); 
-    global->rtoggle^=1; 
-  } 
+    char *restart_fbase[] = { "restart/restart0", "restart/restart1" };
+    dump_restart( restart_fbase[global->rtoggle], 0 );
+    global->rtoggle^=1;
+  }
 
-  if ( step()>0 && global->quota_check_interval && (step()%global->quota_check_interval)==0 ) { 
+  if ( step()>0 && global->quota_check_interval && (step()%global->quota_check_interval)==0 ) {
     if ( mp_elapsed(grid->mp) > global->quota_sec ) {
-      dump_restart( "restart/restart", 0 ); 
-      sim_log( "Restart dump restart completed." ); 
-      sim_log( "Allowed runtime exceeded for this job.  Terminating." ); 
+      dump_restart( "restart/restart", 0 );
+      sim_log( "Restart dump restart completed." );
+      sim_log( "Allowed runtime exceeded for this job.  Terminating." );
       mp_barrier( grid->mp ); // Just to be safe
-      mp_finalize( grid->mp ); 
-      exit(0); 
+      mp_finalize( grid->mp );
+      exit(0);
     }
   }
-# endif 
+# endif
 
-} 
+}
 
 
-begin_field_injection { 
+begin_field_injection {
   // Inject a light wave from lhs boundary with E aligned along y
-  // Use scalar diffraction theory for the Gaussian beam source.  (This is approximate). 
+  // Use scalar diffraction theory for the Gaussian beam source.  (This is approximate).
 
   // For quiet startup (i.e., so that we don't propagate a delta-function noise
-  // pulse at time t=0) we multiply by a constant phase term exp(i phi) where: 
-  //   phi = k*global->xfocus+atan(h)    (3d) 
+  // pulse at time t=0) we multiply by a constant phase term exp(i phi) where:
+  //   phi = k*global->xfocus+atan(h)    (3d)
 
   // Inject from the left a field of the form ey = e0 sin( omega t )
 
 # define DY    ( grid->y0 + (iy-0.5)*grid->dy - global->ycenter )
 # define DZ    ( grid->z0 + (iz-1  )*grid->dz - global->zcenter )
-# define R2    ( DY*DY + DZ*DZ )                                   
+# define R2    ( DY*DY + DZ*DZ )
 # define PHASE ( global->omega*t + h*R2/(global->width*global->width) )
 # define MASK  ( R2<=pow(global->mask*global->width,2) ? 1 : 0 )
 
   if ( grid->x0==0 ) {               // Node is on left boundary
     double alpha      = grid->cvac*grid->dt/grid->dx;
     double emax_coeff = (4/(1+alpha))*global->omega*grid->dt*global->e0;
-    double prefactor  = emax_coeff*sqrt(2/M_PI); 
-    double t          = grid->dt*step(); 
+    double prefactor  = emax_coeff*sqrt(2/M_PI);
+    double t          = grid->dt*step();
 
     // Compute Rayleigh length in c/wpe
-    double rl         = M_PI*global->waist*global->waist/global->lambda; 
+    double rl         = M_PI*global->waist*global->waist/global->lambda;
 
     double pulse_shape_factor = 1;
     float pulse_length        = 70;  // units of 1/wpe
@@ -583,9 +590,9 @@ begin_field_injection {
     double h                  = global->xfocus/rl;   // Distance / Rayleigh length
 
     // Loop over all Ey values on left edge of this node
-    for ( int iz=1; iz<=grid->nz+1; ++iz ) 
-      for ( int iy=1; iy<=grid->ny; ++iy )  
-        field(1,iy,iz).ey += prefactor*cos(PHASE)*exp(-R2/(global->width*global->width))*MASK*pulse_shape_factor; 
+    for ( int iz=1; iz<=grid->nz+1; ++iz )
+      for ( int iy=1; iy<=grid->ny; ++iy )
+        field(1,iy,iz).ey += prefactor*cos(PHASE)*exp(-R2/(global->width*global->width))*MASK*pulse_shape_factor;
   }
 }
 

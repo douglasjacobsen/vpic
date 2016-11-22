@@ -22,7 +22,7 @@ cinch_dir="$(dirname "$(dirname "$(readlink -f $0)")")"
 # (the closest match was "(null)" from "./lpi_2d_F6_test.Linux").  Writing out
 # the raw address instead and keeping my fingers crossed.
 
-cmake \
+cmake3 \
   -DCMAKE_BUILD_TYPE=Debug \
   -DENABLE_COLOR_UNIT_TESTS=ON \
   -DENABLE_INTEGRATED_TESTS=ON \
